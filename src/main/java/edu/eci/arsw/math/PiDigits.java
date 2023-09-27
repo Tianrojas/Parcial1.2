@@ -11,7 +11,6 @@ public class PiDigits {
     private static int DigitsPerSum = 8;
     private static double Epsilon = 1e-17;
 
-    
     /**
      * Returns a range of hexadecimal digits of pi.
      * @param start The starting location of the range.
@@ -46,6 +45,63 @@ public class PiDigits {
 
         return digits;
     }
+
+    /**
+     * Calcula y devuelve una serie de dígitos de Pi en formato hexadecimal.
+     * Polimorfismo de getDigits para controlar la pausa de los hilos.
+     *
+     * @param start El inicio del intervalo para los cálculos.
+     * @param count El número de dígitos de Pi a calcular.
+     * @param lock  Un objeto de bloqueo utilizado para la sincronización.
+     * @param cal   El objeto Calculador que llama a este método.
+     * @return Un array de bytes que contiene los dígitos calculados de Pi en formato hexadecimal.
+     * @throws RuntimeException Si el intervalo de inicio o el número de dígitos son inválidos (menores que 0).
+     */
+    public static byte[] getDigits(int start, int count, Object lock, Calculator cal) {
+        if (start < 0) {
+            throw new RuntimeException("Intervalo inválido");
+        }
+
+        if (count < 0) {
+            throw new RuntimeException("Número de dígitos inválido");
+        }
+
+        byte[] digits = new byte[count];
+        double sum = 0;
+        long startTime = System.nanoTime(); // Tiempo de inicio
+
+        for (int i = 0; i < count; i++) {
+            if (i % DigitsPerSum == 0) {
+                sum = 4 * sum(1, start)
+                        - 2 * sum(4, start)
+                        - sum(5, start)
+                        - sum(6, start);
+
+                start += DigitsPerSum;
+            }
+
+            sum = 16 * (sum - Math.floor(sum));
+            digits[i] = (byte) sum;
+
+            // Verifica el tiempo transcurrido y pausa cada 5 segundos
+            long currentTime = System.nanoTime();
+            long elapsedTime = (currentTime - startTime) / 1_000_000_000; // Tiempo transcurrido en segundos
+            if (elapsedTime >= 5) {
+                synchronized (lock) {
+                    try {
+                        System.out.println("Hilo pausado después de procesar " + i + " dígitos.");
+                        lock.wait(); // Pausa el hilo hasta que se presione Enter
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+                startTime = System.nanoTime(); // Reinicia el tiempo de inicio después de la pausa
+            }
+        }
+
+        return digits;
+    }
+
 
     /// <summary>
     /// Returns the sum of 16^(n - k)/(8 * k + m) from 0 to k.
@@ -109,5 +165,6 @@ public class PiDigits {
 
         return result;
     }
+
 
 }

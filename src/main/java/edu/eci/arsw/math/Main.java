@@ -5,7 +5,6 @@
  */
 package edu.eci.arsw.math;
 
-import java.util.Arrays;
 
 /**
  *
@@ -14,10 +13,28 @@ import java.util.Arrays;
 public class Main {
 
     public static void main(String a[]) {
-        System.out.println(bytesToHex(PiDigits.getDigits(0, 10)));
-        System.out.println(bytesToHex(PiDigits.getDigits(1, 100)));
-        System.out.println(bytesToHex(PiDigits.getDigits(1, 1000000)));
+        //Se comparan los tiempos de ejecución entre los dos tipos de ejecución
+        long startTime1 = System.nanoTime();
+        System.out.println(bytesToHex(PiDigits.getDigits(1, 30000)));
+        long endTime1 = System.nanoTime();
+        long duration1 = (endTime1 - startTime1) / 1_000_000;
+
+        System.out.println(" ");
+
+        //Para la opción de pausa cada 5 segundos, los hilos que van terminando su ejecución van saliendo del conteo
+        //Por eso iteración tras iteración se ven menos hilos
+        //Para jugar entre modalidades cambie la manera en que los hilos se ejecutan en el methods run() de la clase
+        //Calculator, puede que con esta manera aumente el tiempo de compilación con hilos, ya que se estan haciendo pausas
+        //recurrentes, para ver mas la diferencia entre la compilación sin hilos y la compilación con hilos sin pausas
+        long startTime2 = System.nanoTime();
+        System.out.println(bytesToHex(new ThHandler(1, 30000, 10).calculate()));
+        long endTime2 = System.nanoTime();
+        long duration2 = (endTime2 - startTime2) / 1_000_000;
+
+        System.out.println("Tiempo de compilación sin hilos: " + duration1 + " ms");
+        System.out.println("Tiempo de compilación con hilos: " + duration2 + " ms");
     }
+
 
     private final static char[] hexArray = "0123456789ABCDEF".toCharArray();
 
